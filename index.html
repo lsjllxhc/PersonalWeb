@@ -395,3 +395,352 @@
                         <li><a href="images/full-size/8.jpg" target="_blank"><img alt="雪狐桑表情包"
                                                                                   src="images/gif/8.jpg"><span>点击加载大图</span></a>
                         </li>
+                        <li><a href="images/full-size/9.gif" target="_blank"><img alt="雪狐桑表情包"
+                                                                                  src="images/gif/9.gif"><span>点击加载大图</span></a>
+                        </li>
+                        <li><a href="images/full-size/10.gif" target="_blank"><img alt="雪狐桑表情包"
+                                                                                   src="images/gif/10.gif"><span>点击加载大图</span></a>
+                        </li>
+                        <li><a href="images/full-size/11.gif" target="_blank"><img alt="雪狐桑表情包"
+                                                                                   src="images/gif/11.gif"><span>点击加载大图</span></a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="work-more text-center mt-15 mb-15">
+                    <div class="btn-group ork-more text-center mt-30 mb-50" role="group">
+                        <a class="btn btn-secondary main-btn triple-btn" href="https://pic.xuehusang.cn" target="_blank"
+                           type="button">更多壁纸</a>
+                        <a class="btn btn-secondary main-btn triple-btn" href="https://pic.xuehusang.cn/动态壁纸/"
+                           target="_blank" type="button">动态壁纸</a>
+                        <a class="btn btn-secondary main-btn triple-btn" href="https://pic.xuehusang.cn/表情包/"
+                           target="_blank"
+                           type="button">更多表情</a>
+                    </div>
+                </div>
+                <script>
+                    $(document).ready(function () {
+                        var box0 = $(".one"), v0 = 1.9; //这里添加滚动的对象和其速率
+                        var box1 = $(".two"), v1 = 1;
+                        Rin(box0, v0);
+                        Rin(box1, v1);
+
+                        function Rin($Box, v) {//$Box移动的对象，v对象移动的速率
+                            var $Box_ul = $Box.find("ul"),
+                                $Box_li = $Box_ul.find("li"),
+                                $Box_li_span = $Box_li.find("span"),
+                                left = 0,
+                                s = 0,
+                                timer;//定时器
+
+                            $Box_li.each(function (index) {
+                                $($Box_li_span[index]).width($(this).width());//hover
+                                s += $(this).outerWidth(true); //即要滚动的长度
+                            })
+
+                            window.requestAnimationFrame = window.requestAnimationFrame || function (Tmove) {
+                                return setTimeout(Tmove, 1000 / 60)
+                            };
+                            window.cancelAnimationFrame = window.cancelAnimationFrame || clearTimeout;
+
+                            if (s >= $Box.width()) {//如果滚动长度超出Box长度即开始滚动，没有的话就不执行滚动
+                                $Box_li.clone(true).appendTo($Box_ul);
+                                Tmove();
+
+                                function Tmove() {
+                                    //运动是移动left  从0到-s;（个人习惯往左滚）
+                                    left -= v;
+                                    if (left <= -s) {
+                                        left = 0;
+                                        $Box_ul.css("left", left)
+                                    } else {
+                                        $Box_ul.css("left", left)
+                                    }
+                                    timer = requestAnimationFrame(Tmove);
+                                }
+
+                                $Box_ul.hover(function () {
+                                    cancelAnimationFrame(timer)
+                                }, function () {
+                                    Tmove()
+                                })
+                            }
+
+                        }
+                    })
+                </script>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    let camera = {};
+    let controls = {};
+    let effect = {};
+    let light = {};
+    let mesh = {};
+    let renderer = {};
+    let scene = {};
+    let canvasSizeW = parseInt(window.getComputedStyle(document.getElementById('webgl')).width);
+    let canvasSizeH = parseInt(window.getComputedStyle(document.getElementById('webgl')).width) * 540 / 960;
+    let img = document.getElementById("mask-img");
+
+    function startRender() {
+        // img.parentNode.removeChild(img);
+        img.style.display = "none";
+        prepareScene();
+        loadMMD();
+        sceneRender();
+    }
+
+    function prepareScene() {
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(canvasSizeW, canvasSizeH);
+        renderer.setClearColor(0xffffff, 1.0);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('webgl').appendChild(renderer.domElement);
+        effect = new THREE.OutlineEffect(renderer);
+        scene = new THREE.Scene();
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        light = new THREE.DirectionalLight(0xffe2b9, 0.4);
+        light.castShadow = false;
+
+        scene.add(light);
+        scene.add(light.target);
+
+        camera = new THREE.PerspectiveCamera(22.9, canvasSizeW / canvasSizeH, 0.1, 20);
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = .05;
+        controls.minDistance = 1;
+        controls.maxDistance = 10;
+        const GROUND_MESH = new THREE.Mesh(new THREE.PlaneGeometry(10, 10, 1, 1), new THREE.ShadowMaterial({opacity: 0}));
+        GROUND_MESH.geometry.rotateX(-90 * Math.PI / 180);
+        GROUND_MESH.receiveShadow = true;
+        scene.add(GROUND_MESH);
+        scene.add(new THREE.GridHelper(8, 20, 0x000000, 0x999999));
+    }
+
+    function loadMMD() {
+        const LOADER = new THREE.MMDLoader();
+        LOADER.load(
+            'https://i1.xuehusang.cn/static/xuehu3D/%E9%9B%AA%E7%8B%90_0718.pmx',
+            function (mmd) {
+                mesh = mmd;
+                for (let i = 0; i < mesh.material.length; i++) {
+                    mesh.material[i].emissive.multiplyScalar(0.3);
+                    mesh.material[i].userData.outlineParameters.thickness = 0.001;
+                }
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.scale.copy(new THREE.Vector3(1, 1, 1).multiplyScalar(0.0739));
+                const BOUNDING_BOX = new THREE.Box3().setFromObject(mesh);
+                camera.position.copy(new THREE.Vector3(0, 0.5 * BOUNDING_BOX.max.y, 4.5));
+                controls.target = new THREE.Vector3(0, 0.5 * BOUNDING_BOX.max.y, 0);
+                light.target.position.copy(new THREE.Vector3(0, 0.5 * BOUNDING_BOX.max.y, 0));
+                scene.add(mesh);
+            }
+        );
+        resizeRender();
+    }
+
+    function sceneRender() {
+        effect = new THREE.OutlineEffect(renderer);
+        window.requestAnimationFrame(sceneRender);
+        effect.render(scene, camera);
+        controls && controls.update()
+    }
+
+    function resizeRender() {
+        window.addEventListener('resize', function () {
+            effect.setSize(parseInt(window.getComputedStyle(document.getElementById('webgl')).width), parseInt(window.getComputedStyle(document.getElementById('webgl')).width) * 540 / 960);
+        }, false);
+    }
+</script>
+<section id="blog" class="blog-area pt-80 pb-130">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="section-title text-center pb-25">
+                    <h2 class="title">游戏</h2>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-md-center">
+            <div class="col-lg-5" style="text-align: center;">
+                <p class="secondtitle" style="text-align: center;">狐了个狐</p>
+                <img alt="狐了个狐" src="images/hulegehu.jpg" style="border-radius: 10px;"><br><br>
+                <a class="main-btn" href="hulegehu">点击游玩</a>
+            </div>
+            <div class="col-lg-5" style="text-align: center;">
+                <p class="secondtitle" style="text-align: center;   ">合成大萨摩</p>
+                <img alt="合成大萨摩" src="images/makesamo.jpg" style="border-radius: 10px;"><br><br>
+                <a class="main-btn" href="PCgame.html" target="_blank">点击游玩</a>
+            </div>
+        </div>
+	<div class="row justify-content-md-center">
+            <div class="col-lg-5" style="text-align: center;">
+                <p class="secondtitle" style="text-align: center;">2048</p>
+                <img alt="2048" src="images/2048.png" style="border-radius: 10px;"><br><br>
+                <a class="main-btn" href="2048">点击游玩</a>
+            </div>
+        <div class="row justify-content-md-center pt-4">
+</section>
+<section id="contact" class="contact-area pt-80 pb-130 gray-bg">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="section-title text-center pb-25">
+                    <h2 class="title">关于</h2>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-4 col-md-6 col-sm-7">
+                <div class="contact-box text-center mt-30">
+                    <div class="contact-content">
+                        <h6 class="contact-title">浏览器&nbsp;</h6>
+                        <p>推荐使用Edge、Chrome、QQ浏览器等新版主流浏览器以获得最佳浏览体验&nbsp;</p>
+                        <p>&nbsp;</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div id="aplayer"></div>
+<footer id="footer" class="footer-area">
+    <div class="footer-widget pt-30 pb-30">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-md footer-main">
+		    <p>QwQ</p>
+                    <small class="d-block mb-2">©2021-2023 xuehusang.cn</small>
+                </div>
+                <div class="col-6 col-md">
+                    <small style="color: white;">站内导航</small>
+                    <ul class="list-unstyled">
+                        <li>
+                            <a class="link-footer" href="https://pic.xuehusang.cn/" target="_blank">壁纸站</a>
+                        </li>
+                        <li>
+                            <a class="link-footer" href="/hulegehu" target="_blank">狐了个狐</a>
+                        </li>
+                        <li>
+                            <a class="link-footer" href="/PCgame.html"
+                               target="_blank">合成大萨摩</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<!-- easter egg -->
+<div id="icecream" aria-hidden="true" aria-labelledby="exampleModalLabel" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: transparent;border: none !important;">
+            <div class="modal-body">
+                <img alt="草莓香草甜筒~" class="lazy_load" src="images/icecream.gif"/>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Model Download Warning -->
+<a class="back-to-top" href="#"><i class="lni-chevron-up"></i></a>
+<script src="js/message.js"></script>
+<!--粉丝实时查询30秒循环查询-->
+<script>
+    function Yuanxing() {
+        var ajax = new XMLHttpRequest();
+        ajax._url = "https://api.xuehusang.cn/FansNum?" + Math.random();
+        ajax.open("GET", ajax._url, true);
+
+        ajax.send(null);
+        ajax.onreadystatechange = function () {
+            if (ajax.readyState === 4) {
+                let ajax_f = ajax.responseText;
+                let ajax_z = JSON.parse(ajax_f);
+                let xianshi = document.getElementById("fensi");
+                xianshi.innerHTML = "日常不在捏";
+            }
+        }
+    }
+
+    Yuanxing();
+
+</script>
+<!--RANDOM WELCOME WORD-->
+<script>
+    function randomword() {
+        var ajax = new XMLHttpRequest();
+        ajax._url = "https://api.xuehusang.cn/RandomWord?" + Math.random();
+        ajax.open("GET", ajax._url, true);
+
+        ajax.send(null);
+        ajax.onreadystatechange = function () {
+            if (ajax.readyState === 4) {
+                let ajax_f = ajax.responseText;
+                let ajax_z = JSON.parse(ajax_f);
+                let randomw = document.getElementById("randomword");
+                randomw.innerHTML = ajax_z.word;
+
+            }
+
+        }
+
+
+    }
+
+    randomword();
+</script>
+<script src="assets/js/vendor/modernizr-3.6.0.min.js"></script>
+<script src="assets/js/vendor/jquery-1.12.4.min.js"></script>
+<script src="assets/js/popper.min.js"></script>
+<script src="assets/js/jquery.magnific-popup.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/parallax.min.js"></script>
+<script src="assets/js/waypoints.min.js"></script>
+<script src="assets/js/jquery.counterup.min.js"></script>
+<script src="assets/js/jquery.appear.min.js"></script>
+<script src="assets/js/scrolling-nav.js"></script>
+<script src="assets/js/jquery.easing.min.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="https://cdn-go.cn/aegis/aegis-sdk/latest/aegis.min.js"></script>
+<!--<script src="js/APlayer.min.js"></script>-->
+<!--<script src="js/musiclist_202204260225.js"></script>-->
+<!--标题彩蛋-->
+<script>
+    document.addEventListener('visibilitychange', function () {
+        var isHidden = document.hidden;
+        if (isHidden) {
+            setTimeout(() => {
+                document.title = '|･ω･｀)你看不见我';
+            }, 5000)
+            ;
+        } else {
+            document.title = '｜д•´)!!被你发现了';
+            setTimeout(() => {
+                document.title = '雪狐冰屋 — 雪狐桑的个人网站';
+            }, 3000)
+        }
+    });
+</script>
+<script src="assets/js/jquery.button-audio-player.js"></script>
+<script>
+    (function ($) {
+        $('#bapRender').buttonAudioPlayer({
+            type: 'bar-animation',
+            src: '/assets/music/起床闹钟.mp3'
+        });
+        $('#bapRender1').buttonAudioPlayer({
+            type: 'bar-animation',
+            src: '/assets/music/狐狐叫早.mp3'
+        });
+    })(jQuery);
+</script>
+<script src="js/videolist_202211151542.js"></script>
+</body>
+</html>
+
